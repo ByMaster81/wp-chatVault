@@ -8,7 +8,7 @@ export interface Message {
   sender: string | null;
   content: string;
   isMedia: boolean;
-  mediaUrl?: string; // e.g. /backups/ChatName/IMG-123.jpg
+  mediaUrl?: string;
 }
 
 export interface Chat {
@@ -43,14 +43,14 @@ export async function getChat(chatId: string): Promise<Chat | null> {
   try {
     const files = await fs.readdir(chatDir);
     const txtFile = files.find(f => f.endsWith('.txt'));
-    
+
     if (!txtFile) {
       return null;
     }
 
     const txtContent = await fs.readFile(path.join(chatDir, txtFile), 'utf-8');
     const lines = txtContent.split('\n');
-    
+
     const messages: Message[] = [];
     let currentMessage: Message | null = null;
 
@@ -63,24 +63,22 @@ export async function getChat(chatId: string): Promise<Chat | null> {
         if (currentMessage) {
           messages.push(currentMessage);
         }
-        
+
         const date = match[1];
         const time = match[2];
         const sender = match[3];
         let content = match[4];
-        
+
         let isMedia = false;
         let mediaUrl = undefined;
-        
-        // Detection for media files (very basic based on file extensions)
+
         const mediaMatch = content.match(/([a-zA-Z0-9_-]+\.(?:jpg|jpeg|png|mp4|opus|ogg|mp3|pdf|webp))/i);
         if (mediaMatch) {
           const fileName = mediaMatch[1];
           if (files.includes(fileName)) {
             isMedia = true;
             mediaUrl = `/backups/${encodeURIComponent(chatId)}/${encodeURIComponent(fileName)}`;
-            
-            // Metin içindeki o çirkin dosya adını ve "(file attached)" yazısını temizle
+
             content = content.replace(new RegExp(`^${fileName}\\s*\\(.*?\\)\\s*`), '').trim();
             content = content.replace(new RegExp(`<attached:\\s*${fileName}>\\s*`), '').trim();
             content = content.replace(new RegExp(`^${fileName}\\s*`), '').trim();
@@ -99,29 +97,29 @@ export async function getChat(chatId: string): Promise<Chat | null> {
       } else {
         const sysMatch = line.match(systemMessageRegex);
         if (sysMatch && !sysMatch[3].includes(':')) {
-           if (currentMessage) {
-             messages.push(currentMessage);
-           }
-           currentMessage = {
-             id: `${i}`,
-             date: sysMatch[1],
-             time: sysMatch[2],
-             sender: null,
-             content: sysMatch[3],
-             isMedia: false
-           };
+          if (currentMessage) {
+            messages.push(currentMessage);
+          }
+          currentMessage = {
+            id: `${i}`,
+            date: sysMatch[1],
+            time: sysMatch[2],
+            sender: null,
+            content: sysMatch[3],
+            isMedia: false
+          };
         } else if (currentMessage) {
           // Eğer sonraki satırda çirkin bir boş dosya adı falan kalmışsa temizle
           const nextLineMatch = line.match(/([a-zA-Z0-9_-]+\.(?:jpg|jpeg|png|mp4|opus|ogg|mp3|pdf|webp))\s*\(.*?\)/i);
           if (nextLineMatch && files.includes(nextLineMatch[1])) {
-             // Sadece dosya adı olan ekstra satırları görmezden gel (bazen Android iki satır yapıyor)
+            // Sadece dosya adı olan ekstra satırları görmezden gel (bazen Android iki satır yapıyor)
           } else {
-             currentMessage.content += '\n' + line;
+            currentMessage.content += '\n' + line;
           }
         }
       }
     }
-    
+
     if (currentMessage) {
       messages.push(currentMessage);
     }
