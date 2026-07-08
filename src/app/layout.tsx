@@ -8,9 +8,11 @@ import MainWrapper from "@/components/MainWrapper";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "WhatsApp Backup Viewer",
+  title: "WhatsApp Chat Vault",
   description: "View local WhatsApp chat backups offline",
 };
+
+export const dynamic = 'force-dynamic';
 
 export default async function RootLayout({
   children,

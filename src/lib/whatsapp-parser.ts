@@ -78,7 +78,7 @@ export async function getChat(chatId: string): Promise<Chat | null> {
           const fileName = mediaMatch[1];
           if (files.includes(fileName)) {
             isMedia = true;
-            mediaUrl = `/backups/${chatId}/${fileName}`;
+            mediaUrl = `/backups/${encodeURIComponent(chatId)}/${encodeURIComponent(fileName)}`;
             
             // Metin içindeki o çirkin dosya adını ve "(file attached)" yazısını temizle
             content = content.replace(new RegExp(`^${fileName}\\s*\\(.*?\\)\\s*`), '').trim();
