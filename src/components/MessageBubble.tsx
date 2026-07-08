@@ -42,14 +42,16 @@ export default function MessageBubble({ message, isOwn }: { message: Message, is
             </div>
           )}
 
-          <div className={`break-words ${isOnlyEmoji && !message.isMedia ? 'text-4xl' : 'text-[14px] leading-relaxed'}`}>
-            {message.content.split('\n').map((line, i) => (
-              <span key={i}>
-                {line}
-                <br />
-              </span>
-            ))}
-          </div>
+          {message.content.trim() !== '' && (
+            <div className={`break-words ${isOnlyEmoji && !message.isMedia ? 'text-4xl' : 'text-[14px] leading-relaxed'}`}>
+              {message.content.split('\n').map((line, i) => (
+                <span key={i}>
+                  {line}
+                  {i !== message.content.split('\n').length - 1 && <br />}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="text-[11px] text-gray-500 dark:text-gray-400 text-right mt-1 ml-4 inline-block float-right">
             {message.time}

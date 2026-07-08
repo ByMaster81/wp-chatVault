@@ -19,7 +19,7 @@ export interface Chat {
 
 // Regex for standard WhatsApp txt format:
 // Format: "12.05.2023 14:30 - Sender: Message"
-const messageRegex = /^\[?(\d{1,2}[./-]\d{1,2}[./-]\d{2,4}),?\s+(\d{1,2}[:.]\d{2}(?:[:.]\d{2})?(?:\s*[aApP][mM])?)\]?\s+-\s+(.*?):\s+(.*)$/;
+const messageRegex = /^\[?(\d{1,2}[./-]\d{1,2}[./-]\d{2,4}),?\s+(\d{1,2}[:.]\d{2}(?:[:.]\d{2})?(?:\s*[aApP][mM])?)\]?\s+-\s+(.*?):\s*(.*)$/;
 const systemMessageRegex = /^\[?(\d{1,2}[./-]\d{1,2}[./-]\d{2,4}),?\s+(\d{1,2}[:.]\d{2}(?:[:.]\d{2})?(?:\s*[aApP][mM])?)\]?\s+-\s+(.*)$/;
 
 export async function getChats(): Promise<{ id: string, name: string }[]> {
@@ -67,7 +67,7 @@ export async function getChat(chatId: string): Promise<Chat | null> {
         const date = match[1];
         const time = match[2];
         const sender = match[3];
-        const content = match[4];
+        let content = match[4];
         
         let isMedia = false;
         let mediaUrl = undefined;
@@ -79,6 +79,11 @@ export async function getChat(chatId: string): Promise<Chat | null> {
           if (files.includes(fileName)) {
             isMedia = true;
             mediaUrl = `/backups/${chatId}/${fileName}`;
+            
+            // Metin içindeki o çirkin dosya adını ve "(file attached)" yazısını temizle
+            content = content.replace(new RegExp(`^${fileName}\\s*\\(.*?\\)\\s*`), '').trim();
+            content = content.replace(new RegExp(`<attached:\\s*${fileName}>\\s*`), '').trim();
+            content = content.replace(new RegExp(`^${fileName}\\s*`), '').trim();
           }
         }
 
@@ -106,7 +111,13 @@ export async function getChat(chatId: string): Promise<Chat | null> {
              isMedia: false
            };
         } else if (currentMessage) {
-          currentMessage.content += '\n' + line;
+          // Eğer sonraki satırda çirkin bir boş dosya adı falan kalmışsa temizle
+          const nextLineMatch = line.match(/([a-zA-Z0-9_-]+\.(?:jpg|jpeg|png|mp4|opus|ogg|mp3|pdf|webp))\s*\(.*?\)/i);
+          if (nextLineMatch && files.includes(nextLineMatch[1])) {
+             // Sadece dosya adı olan ekstra satırları görmezden gel (bazen Android iki satır yapıyor)
+          } else {
+             currentMessage.content += '\n' + line;
+          }
         }
       }
     }

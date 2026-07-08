@@ -9,8 +9,28 @@ export default function ChatArea({ chat }: { chat: Chat }) {
   const [showMediaOnly, setShowMediaOnly] = useState(false);
   const [visibleCount, setVisibleCount] = useState(100);
   const [modalMedia, setModalMedia] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDeleteChat = async () => {
+    if (window.confirm(`${chat.name} sohbetini ve tüm medyalarını kalıcı olarak silmek istediğinize emin misiniz?`)) {
+      try {
+        const response = await fetch(`/api/chat?id=${encodeURIComponent(chat.name)}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          window.location.href = "/";
+        } else {
+          alert("Silme işlemi başarısız oldu.");
+        }
+      } catch (e) {
+        alert("Silme sırasında bir hata oluştu.");
+      }
+    }
+  };
 
   //listeyi başa sar
   useEffect(() => {
@@ -69,7 +89,7 @@ export default function ChatArea({ chat }: { chat: Chat }) {
         </div>
 
         {/* Sağ Üst Butonlar */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 md:space-x-4">
           <button
             onClick={() => setShowMediaOnly(!showMediaOnly)}
             className={`p-2 rounded-full ${showMediaOnly ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30' : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
@@ -80,22 +100,74 @@ export default function ChatArea({ chat }: { chat: Chat }) {
             </svg>
           </button>
 
-          <div className="relative hidden md:block">
+          <div className={`relative ${isSearchVisible ? 'block' : 'hidden md:block'}`}>
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Mesajlarda ara..."
-              className="w-48 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 rounded-lg pl-8 pr-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-green-500"
+              className="w-48 md:w-48 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 rounded-lg pl-8 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-green-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <svg className="w-4 h-4 absolute left-2.5 top-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
+            {isSearchVisible && (
+              <button 
+                onClick={() => {
+                   setIsSearchVisible(false);
+                   setSearchQuery("");
+                }} 
+                className="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className="relative">
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
+            
+            {isMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)}></div>
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#233138] rounded-lg shadow-xl z-50 py-2 border border-gray-100 dark:border-gray-700">
+                  <button 
+                    onClick={() => {
+                      setIsSearchVisible(true);
+                      setIsMenuOpen(false);
+                      setTimeout(() => searchInputRef.current?.focus(), 100);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#182229]"
+                  >
+                    Sohbeti Ara
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      handleDeleteChat();
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[#182229]"
+                  >
+                    Sohbeti Sil
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Mesaj veya Medya Listesi */}
+      {/*Medya Liste*/}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
@@ -190,7 +262,7 @@ export default function ChatArea({ chat }: { chat: Chat }) {
               );
             })}
 
-            {/* Eski mesajlar yükleniyor göstergesi */}
+            {/*yükleniyor göstergesi */}
             {visibleCount < filteredMessages.length && (
               <div id="loading-trigger" className="flex justify-center py-4 w-full">
                 <div className="bg-white dark:bg-[#182229] shadow-sm rounded-full px-3 py-1 text-xs text-gray-500 flex items-center gap-2">
@@ -206,7 +278,7 @@ export default function ChatArea({ chat }: { chat: Chat }) {
         )}
       </div>
 
-      {/* Fotoğraf Tam Ekran Modu */}
+      {/*Tam Ekran*/}
       {modalMedia && (
         <div
           className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center cursor-zoom-out"

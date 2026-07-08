@@ -7,7 +7,7 @@ services:
     # Tailscale gibi özel ağlarda sadece o IP'den erişim için BIND_IP kullanılabilir.
     # Varsayılan olarak 0.0.0.0 (tüm ağlar) üzerinden açılır.
     ports:
-      - "${BIND_IP:-0.0.0.0}:3000:3000"
+      - "${BIND_IP:-0.0.0.0}:3005:3000"
     # Dışarıdan atacağımız sohbetlerin Docker'a anında yansıması için klasörleri bağlıyoruz
     volumes:
       - ./public/backups:/app/public/backups
