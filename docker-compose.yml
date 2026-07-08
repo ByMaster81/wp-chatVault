@@ -5,10 +5,9 @@ services:
     build: .
     container_name: whatsapp-viewer
     # Tailscale gibi özel ağlarda sadece o IP'den erişim için BIND_IP kullanılabilir.
-    # Varsayılan olarak 0.0.0.0 (tüm ağlar) üzerinden açılır.
+    # Varsayılan olarak 0.0.0.0 üzerinden açılır.
     ports:
       - "${BIND_IP:-0.0.0.0}:3005:3000"
-    # Dışarıdan atacağımız sohbetlerin Docker'a anında yansıması için klasörleri bağlıyoruz
     volumes:
       - ./public/backups:/app/public/backups
     restart: unless-stopped

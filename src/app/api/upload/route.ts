@@ -14,15 +14,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Eksik dosya veya sohbet adı" }, { status: 400 });
     }
 
-    // Gelen dosyanın byte dizisini al
+    // Gelen dosya
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Temp klasöründe geçici bir zip dosyası oluştur
+    // Temp klasöründe geçici bir zip dosyası
     const tempZipPath = path.join(os.tmpdir(), `whatsapp-upload-${Date.now()}.zip`);
     fs.writeFileSync(tempZipPath, buffer);
 
-    // Çıkartılacak hedef klasör
+    //hedef klasör
     const targetDir = path.join(process.cwd(), "public", "backups", chatName.trim());
 
     // Eğer hedef klasör varsa, önce içini temizle (isteğe bağlı) veya üzerine yaz
