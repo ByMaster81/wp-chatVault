@@ -25,7 +25,7 @@ public/
       VID-20230502.mp4
 ```
 
-*(Özel sohbetleriniz yanlışlıkla GitHub'a gitmesin diye `public/backups` klasörünü `.gitignore` dosyasına ekledim.)*
+
 
 ## Kurulum (Docker ile En Kolayı)
 
