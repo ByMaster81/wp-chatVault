@@ -4,9 +4,9 @@ import path from "path";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   try {
-    const { path: urlPath } = await params;
+    const resolvedParams = await params;
     // Kötü niyetli üst klasöre çıkma (directory traversal) saldırılarını engelle
-    const safePath = urlPath.filter(p => !p.includes('..')).join('/');
+    const safePath = resolvedParams.path.filter(p => !p.includes('..')).join('/');
     const filePath = path.join(process.cwd(), "public", "backups", safePath);
 
     if (!fs.existsSync(filePath)) {
