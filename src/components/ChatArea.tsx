@@ -11,6 +11,29 @@ export default function ChatArea({ chat }: { chat: Chat }) {
   const [modalMedia, setModalMedia] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [mySender, setMySender] = useState<string>("");
+
+  const uniqueSenders = Array.from(new Set(chat.messages.map(m => m.sender).filter(Boolean))) as string[];
+
+  const getIsOwn = (sender: string) => {
+    if (mySender) return sender === mySender;
+    
+    // Auto-detect based on folder name
+    const possibleOtherSenders = uniqueSenders.filter(s => 
+      chat.name.toLowerCase().includes(s.toLowerCase()) || 
+      s.toLowerCase().includes(chat.name.toLowerCase())
+    );
+    let detectedOther = chat.name;
+    if (possibleOtherSenders.length > 0) {
+      detectedOther = possibleOtherSenders.sort((a, b) => b.length - a.length)[0];
+    }
+    
+    if (uniqueSenders.length > 2 && possibleOtherSenders.length === 0) {
+      return false; // Grup sohbetinde isem ve bulamadıysam herkesi karşı tarafa at
+    }
+
+    return sender !== detectedOther;
+  };
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -140,7 +163,20 @@ export default function ChatArea({ chat }: { chat: Chat }) {
             {isMenuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)}></div>
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#233138] rounded-lg shadow-xl z-50 py-2 border border-gray-100 dark:border-gray-700">
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#233138] rounded-lg shadow-xl z-50 py-2 border border-gray-100 dark:border-gray-700">
+                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                    <label className="block text-xs text-gray-500 mb-1">Ben Kimim?</label>
+                    <select 
+                      className="w-full bg-gray-50 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 rounded p-1 border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500"
+                      value={mySender}
+                      onChange={(e) => setMySender(e.target.value)}
+                    >
+                      <option value="">Otomatik</option>
+                      {uniqueSenders.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
                   <button 
                     onClick={() => {
                       setIsSearchVisible(true);
@@ -246,7 +282,7 @@ export default function ChatArea({ chat }: { chat: Chat }) {
                 );
               }
 
-              const isOwn = msg.sender !== chat.name;
+              const isOwn = getIsOwn(msg.sender);
 
               return (
                 <div key={msg.id} className="flex flex-col-reverse w-full">
